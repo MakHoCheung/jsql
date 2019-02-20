@@ -2,8 +2,12 @@ package cn.icuter.jsql.builder;
 
 import cn.icuter.jsql.TestTable;
 import cn.icuter.jsql.condition.Cond;
+import cn.icuter.jsql.condition.Condition;
 import cn.icuter.jsql.dialect.Dialects;
 import org.junit.Test;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -35,11 +39,37 @@ public class BuilderTest {
                 .in("user", "0000", "0001", "0002")
                 .forUpdate()
                 .build();
-        assertEquals("select distinct * from t_table1 left join t_table2 on (t_table1.id=t_table2.id) " +
+        String expectedSQL = "select distinct * from t_table1 left join t_table2 on (t_table1.id=t_table2.id) " +
                 "where (name = ? or age = ? or tall = ?) and (id = ? and name like ?) and birth = ? or post = ? " +
-                "and user in (?,?,?) for update", select.getSql());
-        assertArrayEquals(new Object[]{"Edward", 30, 170, "123", "%Lee",
-                "198910", "511442", "0000", "0001", "0002"}, select.getPreparedValues().toArray());
+                "and user in (?,?,?) for update";
+        Object[] values = new Object[]{"Edward", 30, 170, "123", "%Lee", "198910", "511442", "0000", "0001", "0002"};
+
+        assertEquals(expectedSQL, select.getSql());
+        assertArrayEquals(values, select.getPreparedValues().toArray());
+
+        List<Condition> orConditionList = new LinkedList<>();
+        orConditionList.add(Cond.eq("name", "Edward"));
+        orConditionList.add(Cond.eq("age", 30));
+        orConditionList.add(Cond.eq("tall", 170));
+
+        List<Condition> andConditionList = new LinkedList<>();
+        andConditionList.add(Cond.eq("id", "123"));
+        andConditionList.add(Cond.like("name", "%Lee"));
+
+        select = new SelectBuilder().select().distinct()
+                .from("t_table1").leftJoinOn("t_table2", Cond.var("t_table1.id", "t_table2.id"))
+                .where()
+                .or(orConditionList)
+                .and()
+                .and(andConditionList)
+                .and(Cond.eq("birth", "198910"))
+                .or(Cond.eq("post", "511442"))
+                .and()
+                .in("user", "0000", "0001", "0002")
+                .forUpdate()
+                .build();
+        assertEquals(expectedSQL, select.getSql());
+        assertArrayEquals(values, select.getPreparedValues().toArray());
 
         Builder existsSelect = new SelectBuilder().select("1")
                 .from("t_table1")

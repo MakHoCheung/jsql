@@ -10,6 +10,7 @@ import cn.icuter.jsql.exception.JSQLException;
 import cn.icuter.jsql.log.JSQLLogger;
 import cn.icuter.jsql.log.Logs;
 import cn.icuter.jsql.orm.ORMapper;
+import cn.icuter.jsql.util.ObjectUtil;
 
 import java.lang.reflect.Field;
 import java.sql.Blob;
@@ -45,7 +46,7 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
 
     public DefaultJdbcExecutor(Connection connection, boolean columnLowerCase) {
         this.connection = connection;
-        this.columnLowerCase = columnLowerCase;
+        setColumnLowerCase(columnLowerCase);
     }
 
     @Override
@@ -58,20 +59,11 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
             for (int i = 0, len = preparedValues.size(); i < len; i++) {
                 Object value = preparedValues.get(i);
                 if (JSQLClob.class.isAssignableFrom(value.getClass())) {
-                    JSQLClob clobValue = (JSQLClob) value;
-                    Clob clobFromConnection = connection.createClob();
-                    clobFromConnection.setString(1, clobValue.getSubString(1, (int) clobValue.length()));
-                    ps.setClob(i + 1, clobFromConnection);
+                    ps.setClob(i + 1, ((JSQLClob) value).copyTo(connection.createClob()));
                 } else if (JSQLNClob.class.isAssignableFrom(value.getClass())) {
-                    JSQLNClob nclobValue = (JSQLNClob) value;
-                    NClob nclobFromConnection = connection.createNClob();
-                    nclobFromConnection.setString(1, nclobValue.getSubString(1, (int) nclobValue.length()));
-                    ps.setNClob(i + 1, nclobFromConnection);
+                    ps.setNClob(i + 1, ((JSQLNClob) value).copyTo(connection.createNClob()));
                 } else if (JSQLBlob.class.isAssignableFrom(value.getClass())) {
-                    JSQLBlob blobValue = (JSQLBlob) value;
-                    Blob blobFromConnection = connection.createBlob();
-                    blobFromConnection.setBytes(1, blobValue.getBytes(1, (int) blobValue.length()));
-                    ps.setBlob(i + 1, blobFromConnection);
+                    ps.setBlob(i + 1, ((JSQLBlob) value).copyTo(connection.createBlob()));
                 } else {
                     ps.setObject(i + 1, value);
                 }
@@ -112,7 +104,7 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
                         } else if (field.getType() == Double.TYPE) {
                             field.set(record, rs.getDouble(rsIndex));
                         } else {
-                            field.set(record, rs.getObject(rsIndex, field.getType()));
+                            field.set(record, rs.getObject(rsIndex));
                         }
                     } else if (Blob.class.isAssignableFrom(field.getType())) {
                         field.set(record, rs.getBlob(rsIndex));
@@ -120,8 +112,26 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
                         field.set(record, rs.getNClob(rsIndex));
                     } else if (Clob.class.isAssignableFrom(field.getType())) {
                         field.set(record, rs.getClob(rsIndex));
+                    } else if (ObjectUtil.isByteArray(field)) {
+                        field.set(record, rs.getBytes(rsIndex));
+                    } else if (Boolean.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getBoolean(rsIndex));
+                    } else if (Byte.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getByte(rsIndex));
+                    } else if (Short.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getShort(rsIndex));
+                    } else if (Integer.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getInt(rsIndex));
+                    } else if (Long.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getLong(rsIndex));
+                    } else if (Float.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getFloat(rsIndex));
+                    } else if (Double.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getDouble(rsIndex));
+                    } else if (String.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getString(rsIndex));
                     } else {
-                        field.set(record, rs.getObject(rsIndex, field.getType()));
+                        field.set(record, rs.getObject(rsIndex));
                     }
                 }
                 queriedResult.add(record);

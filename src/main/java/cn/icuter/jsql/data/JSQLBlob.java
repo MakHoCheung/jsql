@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
 
@@ -116,6 +117,11 @@ public class JSQLBlob implements java.sql.Blob {
         int from = (int) pos - 1;
         byte[] partOfBytes = Arrays.copyOfRange(data, from, from + (int) length);
         return new ByteArrayInputStream(partOfBytes);
+    }
+
+    public Blob copyTo(Blob targetBlob) throws SQLException {
+        targetBlob.setBytes(1, getBytes(1, (int) length()));
+        return targetBlob;
     }
 
     private void checkPosition(long position) throws SQLException {

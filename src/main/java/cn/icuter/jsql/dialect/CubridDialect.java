@@ -26,4 +26,19 @@ public class CubridDialect implements Dialect {
     public boolean supportOffsetLimit() {
         return true;
     }
+
+    @Override
+    public boolean supportConnectionIsValid() {
+        return false;
+    }
+
+    @Override
+    public String validationSql() {
+        return "select 1";
+    }
+
+    @Override
+    public boolean supportSavepoint() {
+        return false;
+    }
 }

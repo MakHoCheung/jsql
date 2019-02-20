@@ -1,21 +1,22 @@
-package cn.icuter.jsql.executor.base;
+package cn.icuter.jsql.executor;
 
 import cn.icuter.jsql.TestTable;
+import cn.icuter.jsql.TestUtils;
 import cn.icuter.jsql.builder.Builder;
 import cn.icuter.jsql.builder.SelectBuilder;
 import cn.icuter.jsql.condition.Cond;
 import cn.icuter.jsql.datasource.ConnectionPool;
 import cn.icuter.jsql.datasource.JSQLDataSource;
 import cn.icuter.jsql.datasource.JdbcExecutorPool;
+import cn.icuter.jsql.datasource.PoolConfiguration;
+import cn.icuter.jsql.dialect.Dialect;
 import cn.icuter.jsql.dialect.Dialects;
 import cn.icuter.jsql.exception.ExecutionException;
 import cn.icuter.jsql.exception.JSQLException;
-import cn.icuter.jsql.executor.DefaultJdbcExecutor;
-import cn.icuter.jsql.executor.JdbcExecutor;
-import cn.icuter.jsql.executor.TransactionExecutor;
 import cn.icuter.jsql.transaction.Transaction;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -34,12 +35,37 @@ import static org.junit.Assert.assertEquals;
  * @author edward
  * @since 2019-02-12
  */
-public abstract class JdbcExecutorBaseTest {
-    protected static final String TABLE_NAME = "t_jsql_test";
-    protected static JdbcExecutorPool pool;
-    protected static JSQLDataSource dataSource;
-    protected static ConnectionPool poolConn;
+public class JdbcExecutorTest {
+    private static final String TABLE_NAME = "t_jsql_test";
+    private static JdbcExecutorPool pool;
+    private static JSQLDataSource dataSource;
+    private static ConnectionPool poolConn;
     private int order = 0;
+
+    @BeforeClass
+    public static void setup() throws IOException {
+        PoolConfiguration poolConfiguration = PoolConfiguration.defaultPoolCfg();
+        poolConfiguration.setMaxPoolSize(3);
+        dataSource = TestUtils.getDataSource();
+        pool = dataSource.createExecutorPool(poolConfiguration);
+        poolConn = dataSource.createConnectionPool(poolConfiguration);
+        try (JdbcExecutor executor = pool.getExecutor()) {
+            try {
+                dataSource.sql("DROP TABLE " + TABLE_NAME).execUpdate(executor);
+            } catch (JSQLException e) {
+                // ignore
+            }
+            dataSource.sql("CREATE TABLE " + TABLE_NAME + "\n" +
+                    "(\n" +
+                    "  test_id VARCHAR(60) NOT NULL,\n" +
+                    "  t_col_1 VARCHAR(60) NULL,\n" +
+                    "  t_col_2 VARCHAR(60) NULL,\n" +
+                    "  order_num INTEGER NULL,\n" +
+                    "  PRIMARY KEY (test_id))").execUpdate(executor);
+        } catch (JSQLException e) {
+            throw new IOException(e);
+        }
+    }
 
     @AfterClass
     public static void tearDown() throws JSQLException, IOException {
@@ -122,6 +148,11 @@ public abstract class JdbcExecutorBaseTest {
 
     @Test
     public void testRollbackSavepoint() throws Exception {
+        Dialect dialect = dataSource.getDialect();
+        if (dialect == Dialects.CUBRID) {
+            // cubrid jdbc driver do not support savepoint
+            return;
+        }
         TransactionExecutor executor = pool.getTransactionExecutor();
         String testId = null;
         try {
@@ -387,6 +418,9 @@ public abstract class JdbcExecutorBaseTest {
         TransactionExecutor txExecutor = dataSource.createTransaction();
         try {
             txExecutor.execBatch(batchList);
+            if (dataSource.getDialect() == Dialects.CUBRID) {
+                throw new ExecutionException("cubrid ignore inserting too long column exception");
+            }
         } catch (JSQLException e) {
             txExecutor.rollback();
             throw e;

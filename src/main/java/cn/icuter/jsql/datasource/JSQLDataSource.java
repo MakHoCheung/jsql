@@ -153,7 +153,7 @@ public class JSQLDataSource {
     }
 
     private ObjectPool<Connection> createConnectionObjectPool(PoolConfiguration poolConfiguration) {
-        PooledObjectManager<Connection> manager = new PooledConnectionManager(url, username, password);
+        PooledObjectManager<Connection> manager = new PooledConnectionManager(this);
         return poolConfiguration == null ? new DefaultObjectPool<>(manager)
                 : new DefaultObjectPool<>(manager, poolConfiguration);
     }

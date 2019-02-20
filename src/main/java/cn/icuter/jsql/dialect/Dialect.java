@@ -26,4 +26,13 @@ public interface Dialect {
     default String wrapLimit(BuilderContext builderContext, String sql) {
         return sql;
     }
+    default boolean supportConnectionIsValid() {
+        return true;
+    }
+    default String validationSql() {
+        return null;
+    }
+    default boolean supportSavepoint() {
+        return true;
+    }
 }

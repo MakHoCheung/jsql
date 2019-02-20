@@ -1,6 +1,7 @@
 package cn.icuter.jsql;
 
 import cn.icuter.jsql.datasource.JSQLDataSource;
+import cn.icuter.jsql.executor.ORMTest;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,15 +14,61 @@ import java.util.Properties;
  * @since 2019-02-12
  */
 public abstract class TestUtils {
+    public static String DB_TYPE_KEY = "dbType";
 
-    public static JSQLDataSource getDataSource(String propName) {
+    public static JSQLDataSource getDataSource() {
         Properties properties = new Properties();
+        String dbType = System.getProperty(TestUtils.DB_TYPE_KEY, "");
         String icuterHome = System.getenv("ICUTER_HOME"); // only for test
-        try (InputStream in = new FileInputStream(new File(icuterHome, "conf/" + propName + ".properties"))) {
+        File jdbcPropFile = new File(icuterHome, String.format("conf/%s.properties", dbType.toLowerCase()));
+        try (InputStream in = new FileInputStream(jdbcPropFile)) {
             properties.load(in);
             return new JSQLDataSource(properties);
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    public static String getCreateOrmTableSql() {
+        String dbType = System.getProperty(TestUtils.DB_TYPE_KEY, "");
+        if (dbType == null || dbType.isEmpty()) {
+            throw new IllegalArgumentException("dbType must not be null or empty");
+        }
+        if ("mariadb".equalsIgnoreCase(dbType) || "mysql".equalsIgnoreCase(dbType)) {
+            return "CREATE TABLE " + ORMTest.TABLE_NAME + "\n" +
+                    "(\n" +
+                    "  orm_id VARCHAR(60) NOT NULL,\n" +
+                    "  f_blob BLOB NULL,\n" +
+                    "  f_string VARCHAR(60) NULL,\n" +
+                    "  f_int INTEGER NULL,\n" +
+                    "  f_integer INTEGER NULL,\n" +
+                    "  f_double decimal(10,3) NULL,\n" +
+                    "  f_decimal decimal(10,3) NULL,\n" +
+                    "  f_clob TEXT NULL,\n" + // mysql/mariadb
+                    "  PRIMARY KEY (orm_id))";
+        } else if ("postgresql".equalsIgnoreCase(dbType)) {
+            return "CREATE TABLE " + ORMTest.TABLE_NAME + "\n" +
+                    "(\n" +
+                    "  orm_id VARCHAR(60) NOT NULL,\n" +
+                    "  f_blob bytea NULL,\n" + // postgreSQL
+                    "  f_string VARCHAR(60) NULL,\n" +
+                    "  f_int INTEGER NULL,\n" +
+                    "  f_integer INTEGER NULL,\n" +
+                    "  f_double decimal(10,3) NULL,\n" +
+                    "  f_decimal decimal(10,3) NULL,\n" +
+                    "  f_clob TEXT NULL,\n" +
+                    "  PRIMARY KEY (orm_id))";
+        }
+        return "CREATE TABLE " + ORMTest.TABLE_NAME + "\n" +
+                "(\n" +
+                "  orm_id VARCHAR(60) NOT NULL,\n" +
+                "  f_blob BLOB NULL,\n" +
+                "  f_string VARCHAR(60) NULL,\n" +
+                "  f_int INTEGER NULL,\n" +
+                "  f_integer INTEGER NULL,\n" +
+                "  f_double decimal(10,3) NULL,\n" +
+                "  f_decimal decimal(10,3) NULL,\n" +
+                "  f_clob CLOB NULL,\n" +
+                "  PRIMARY KEY (orm_id))";
     }
 }

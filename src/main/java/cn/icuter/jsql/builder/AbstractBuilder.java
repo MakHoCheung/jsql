@@ -104,6 +104,14 @@ public abstract class AbstractBuilder implements Builder {
     }
 
     @Override
+    public Builder and(List<Condition> conditionList) {
+        Condition andConditions = Cond.and(conditionList);
+        addCondition(andConditions);
+        sqlStringBuilder.append(andConditions.toSql());
+        return this;
+    }
+
+    @Override
     public Builder or(Condition condition) {
         addCondition(condition);
         sqlStringBuilder.append("or").append(condition.toSql());
@@ -119,8 +127,16 @@ public abstract class AbstractBuilder implements Builder {
     }
 
     @Override
+    public Builder or(List<Condition> conditionList) {
+        Condition orConditions = Cond.or(conditionList);
+        addCondition(orConditions);
+        sqlStringBuilder.append(orConditions.toSql());
+        return this;
+    }
+
+    @Override
     public Builder where() {
-        sqlStringBuilder.append("where");
+        sqlStringBuilder.append("where", "where-conditions");
         return this;
     }
 
