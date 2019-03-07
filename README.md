@@ -55,3 +55,6 @@ bugfix:
 feature:
 1. Builder as Condition value
 2. Add `UnionSelectBuilder` for union/unionAll operation
+
+
+add test ci
