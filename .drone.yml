@@ -97,6 +97,7 @@ steps:
     event:
     - push
 
+
 #- name: test cubrid
 #  image: maven:3-jdk-8
 #  volumes:
