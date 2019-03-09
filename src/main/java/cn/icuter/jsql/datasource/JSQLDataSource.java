@@ -22,6 +22,7 @@ import cn.icuter.jsql.log.Logs;
 import cn.icuter.jsql.pool.DefaultObjectPool;
 import cn.icuter.jsql.pool.ObjectPool;
 import cn.icuter.jsql.pool.PooledObjectManager;
+import cn.icuter.jsql.util.ObjectUtil;
 
 import java.sql.Blob;
 import java.sql.Clob;
@@ -98,6 +99,10 @@ public class JSQLDataSource {
     }
 
     private void init(String url, String username, String password, String driverClassName, int loginTimeout, Dialect dialect) {
+        ObjectUtil.requireNonEmpty(url, "url must not be empty");
+        ObjectUtil.requireNonEmpty(username, "username must not be empty");
+        ObjectUtil.requireNonNull(password, "password must not be null");
+
         this.url = url;
         this.username = username;
         this.password = password;
