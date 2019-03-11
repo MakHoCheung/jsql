@@ -119,7 +119,11 @@ public class JSQLClob implements java.sql.Clob {
     }
 
     public Clob copyTo(Clob targetClob) throws SQLException {
-        targetClob.setString(1, getSubString(1, (int) length()));
+        targetClob.setString(1, getClobString());
         return targetClob;
+    }
+
+    public String getClobString() {
+        return data.toString();
     }
 }

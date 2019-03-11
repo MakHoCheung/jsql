@@ -119,15 +119,19 @@ public class JSQLBlob implements java.sql.Blob {
         return new ByteArrayInputStream(partOfBytes);
     }
 
-    public Blob copyTo(Blob targetBlob) throws SQLException {
-        targetBlob.setBytes(1, getBytes(1, (int) length()));
-        return targetBlob;
-    }
-
     private void checkPosition(long position) throws SQLException {
         if (position <= 0 || position > data.length + 1) {
             throw new SQLException("Position Parameter " + position + " is out of acceptable position between 1 and "
                     + (data.length + 1));
         }
+    }
+
+    public Blob copyTo(Blob targetBlob) throws SQLException {
+        targetBlob.setBytes(1, getBytes(1, (int) length()));
+        return targetBlob;
+    }
+
+    public byte[] getBlobBytes() {
+        return data.clone();
     }
 }

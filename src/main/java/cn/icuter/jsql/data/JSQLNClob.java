@@ -20,4 +20,8 @@ public class JSQLNClob extends JSQLClob implements java.sql.NClob {
         targetNclob.setString(1, getSubString(1, (int) length()));
         return targetNclob;
     }
+
+    public String getNClobString() {
+        return getClobString();
+    }
 }

@@ -41,4 +41,9 @@ public class CubridDialect implements Dialect {
     public boolean supportSavepoint() {
         return false;
     }
+
+    @Override
+    public boolean supportNClob() {
+        return false;
+    }
 }

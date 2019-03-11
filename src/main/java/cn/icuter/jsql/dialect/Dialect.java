@@ -35,4 +35,13 @@ public interface Dialect {
     default boolean supportSavepoint() {
         return true;
     }
+    default boolean supportBlob() {
+        return true;
+    }
+    default boolean supportClob() {
+        return true;
+    }
+    default boolean supportNClob() {
+        return true;
+    }
 }

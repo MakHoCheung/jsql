@@ -60,4 +60,9 @@ public class DerbyDialect implements Dialect {
     public boolean supportOffsetLimit() {
         return true;
     }
+
+    @Override
+    public boolean supportNClob() {
+        return false;
+    }
 }
