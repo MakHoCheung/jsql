@@ -41,4 +41,9 @@ public class SQLiteDialect implements Dialect {
     public boolean supportNClob() {
         return false;
     }
+
+    @Override
+    public boolean requireUserPassword() {
+        return false;
+    }
 }

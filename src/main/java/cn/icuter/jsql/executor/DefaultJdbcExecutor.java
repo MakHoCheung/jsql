@@ -14,6 +14,7 @@ import cn.icuter.jsql.orm.ORMapper;
 import cn.icuter.jsql.util.ObjectUtil;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -146,6 +147,8 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
                         field.set(record, rs.getDouble(rsIndex));
                     } else if (String.class.isAssignableFrom(field.getType())) {
                         field.set(record, rs.getString(rsIndex));
+                    } else if (BigDecimal.class.isAssignableFrom(field.getType())) {
+                        field.set(record, rs.getBigDecimal(rsIndex));
                     } else {
                         field.set(record, rs.getObject(rsIndex));
                     }

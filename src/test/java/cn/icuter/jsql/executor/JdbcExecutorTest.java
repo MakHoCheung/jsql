@@ -143,7 +143,7 @@ public class JdbcExecutorTest {
     @Test
     public void testRollbackSavepoint() throws Exception {
         Dialect dialect = dataSource.getDialect();
-        if (dialect == Dialects.CUBRID) {
+        if (!dialect.supportSavepoint()) {
             // cubrid jdbc driver do not support savepoint
             return;
         }
@@ -155,9 +155,10 @@ public class JdbcExecutorTest {
             executor.addSavepoint("savepoint_1");
 
             dataSource.insert(TABLE_NAME)
-                    .values(Cond.eq("test_id", "0123456789012345678901234567890123456789012345678901234567890123456789"),
-                            Cond.eq("t_col_1", "tx-val-2-2-2"),
-                            Cond.eq("t_col_2", "tx-val-2-2-2"))
+                    .values(Cond.eq("test_id", testId),
+                            Cond.eq("t_col_1", "tx-val-2-2-1"),
+                            Cond.eq("t_col_2", "tx-val-2-2-2")
+                    )
                     .execUpdate(executor);
 
             executor.addSavepoint("savepoint_2");
@@ -186,6 +187,10 @@ public class JdbcExecutorTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void testBuilderOffsetLimit() throws Exception {
+        if (dataSource.getDialect() == Dialects.SQLITE) {
+            // SQLite Driver DO NOT support cursor operation
+            return;
+        }
         JdbcExecutor jdbcExecutor = pool.getExecutor();
         try {
             for (int i = 0; i < 10; i++) {
@@ -405,16 +410,14 @@ public class JdbcExecutorTest {
         batchList.add(newInsertBuilder());
 
         TestTable testTable = createTestTableRecord();
-        testTable.setCol1("01234567890123456789012345678901234567890123456789012345678901234567891");
+        testTable.setTestId(UUID.randomUUID().toString());
         batchList.add(dataSource.insert(TABLE_NAME).values(testTable).build());
+        batchList.add(dataSource.insert(TABLE_NAME).values(Cond.eq("test_id", testTable.getTestId())).build());
         batchList.add(newInsertBuilder());
         batchList.add(newInsertBuilder());
         TransactionExecutor txExecutor = dataSource.createTransaction();
         try {
             txExecutor.execBatch(batchList);
-            if (dataSource.getDialect() == Dialects.CUBRID) {
-                throw new ExecutionException("cubrid ignore inserting too long column exception");
-            }
         } catch (JSQLException e) {
             txExecutor.rollback();
             throw e;
