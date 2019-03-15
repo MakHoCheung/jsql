@@ -100,14 +100,16 @@ public class JSQLDataSource {
 
     private void init(String url, String username, String password, String driverClassName, int loginTimeout, Dialect dialect) {
         ObjectUtil.requireNonEmpty(url, "url must not be empty");
-        ObjectUtil.requireNonEmpty(username, "username must not be empty");
-        ObjectUtil.requireNonNull(password, "password must not be null");
 
         this.url = url;
         this.username = username;
         this.password = password;
         this.driverClassName = driverClassName;
         this.dialect = dialect;
+        if (dialect.requireUserPassword()) {
+            ObjectUtil.requireNonEmpty(username, "username must not be empty");
+            ObjectUtil.requireNonNull(password, "password must not be null");
+        }
         if ((this.driverClassName == null || this.driverClassName.length() <= 0) && this.dialect != null) {
             this.driverClassName = this.dialect.getDriverClassName();
         }

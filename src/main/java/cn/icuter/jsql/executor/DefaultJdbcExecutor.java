@@ -95,7 +95,7 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
         return doExecQuery(builder, (rs, meta) -> {
             Dialect dialect = builder.getBuilderContext().getDialect();
             int fetchSize = rs.getFetchSize();
-            boolean hasLimit = fetchSize > 0;
+            boolean hasLimit = !dialect.supportOffsetLimit() && fetchSize > 0;
             Map<Field, Integer> colIndexFieldMap = mapColumnFieldAndIndex(clazz, meta);
             List<T> queriedResult = new LinkedList<>();
             while (rs.next()) {
@@ -123,23 +123,11 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
                             field.set(record, rs.getObject(rsIndex));
                         }
                     } else if (Blob.class.isAssignableFrom(field.getType())) {
-                        if (dialect.supportBlob()) {
-                            field.set(record, rs.getBlob(rsIndex));
-                        } else {
-                            field.set(record, new JSQLBlob(rs.getBytes(rsIndex)));
-                        }
+                        field.set(record, new JSQLBlob(rs.getBytes(rsIndex)));
                     } else if (NClob.class.isAssignableFrom(field.getType())) {
-                        if (dialect.supportNClob()) {
-                            field.set(record, rs.getNClob(rsIndex));
-                        } else {
-                            field.set(record, new JSQLNClob(rs.getNString(rsIndex)));
-                        }
+                        field.set(record, new JSQLNClob(rs.getNString(rsIndex)));
                     } else if (Clob.class.isAssignableFrom(field.getType())) {
-                        if (dialect.supportClob()) {
-                            field.set(record, rs.getClob(rsIndex));
-                        } else {
-                            field.set(record, new JSQLClob(rs.getString(rsIndex)));
-                        }
+                        field.set(record, new JSQLClob(rs.getString(rsIndex)));
                     } else if (ObjectUtil.isByteArray(field)) {
                         field.set(record, rs.getBytes(rsIndex));
                     } else if (Boolean.class.isAssignableFrom(field.getType())) {
@@ -174,8 +162,9 @@ public class DefaultJdbcExecutor implements JdbcExecutor {
     @Override
     public List<Map<String, Object>> execQuery(Builder builder) throws JSQLException {
         return doExecQuery(builder, (rs, meta) -> {
+            Dialect dialect = builder.getBuilderContext().getDialect();
             int fetchSize = rs.getFetchSize();
-            boolean hasLimit = fetchSize > 0;
+            boolean hasLimit = !dialect.supportOffsetLimit() && fetchSize > 0;
             List<Map<String, Object>> result = new LinkedList<>();
             while (rs.next()) {
                 Map<String, Object> record = new LinkedHashMap<>();

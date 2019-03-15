@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
  * @since 2019-02-12
  */
 public class JdbcExecutorTest {
-    private static final String TABLE_NAME = "t_jsql_test";
+    public static final String TABLE_NAME = "t_jsql_test";
     private static JdbcExecutorPool pool;
     private static JSQLDataSource dataSource;
     private static ConnectionPool poolConn;
@@ -55,13 +55,7 @@ public class JdbcExecutorTest {
             } catch (JSQLException e) {
                 // ignore
             }
-            dataSource.sql("CREATE TABLE " + TABLE_NAME + "\n" +
-                    "(\n" +
-                    "  test_id VARCHAR(60) NOT NULL,\n" +
-                    "  t_col_1 VARCHAR(60) NULL,\n" +
-                    "  t_col_2 VARCHAR(60) NULL,\n" +
-                    "  order_num INTEGER NULL,\n" +
-                    "  PRIMARY KEY (test_id))").execUpdate(executor);
+            dataSource.sql(TestUtils.getCreateJdbcTableSql()).execUpdate(executor);
         } catch (JSQLException e) {
             throw new IOException(e);
         }

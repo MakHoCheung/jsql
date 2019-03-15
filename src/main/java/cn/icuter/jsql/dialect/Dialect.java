@@ -44,4 +44,7 @@ public interface Dialect {
     default boolean supportNClob() {
         return true;
     }
+    default boolean requireUserPassword() {
+        return true;
+    }
 }
